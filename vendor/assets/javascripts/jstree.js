@@ -3755,10 +3755,17 @@
 					break;
 			}
 			if(pos > new_par.children.length) { pos = new_par.children.length; }
-			if(!this.check("move_node", obj, new_par, pos, { 'core' : true, 'is_multi' : (old_ins && old_ins._id && old_ins._id !== this._id), 'is_foreign' : (!old_ins || !old_ins._id) })) {
+
+			// TGFI Modification Start
+			// ## Adding information to check method to help in displaying of confirm dialog
+			var current_parent;
+			if(old_ins._model.data[old_par] && $.inArray(obj.id, old_ins._model.data[old_par].children)){ current_parent = old_ins._model.data[old_par]; }
+
+			if(!this.check("move_node", obj, new_par, pos, { 'core' : true, 'is_multi' : (old_ins && old_ins._id && old_ins._id !== this._id), 'is_foreign' : (!old_ins || !old_ins._id), 'current_parent' : current_parent, 'current_position' : old_pos, "depth_change" : current_parent != new_par })) {
 				this.settings.core.error.call(this, this._data.core.last_error);
 				return false;
 			}
+			// TGFI Modification End
 			if(obj.parent === new_par.id) {
 				dpc = new_par.children.concat();
 				tmp = $.inArray(obj.id, dpc);
@@ -5905,7 +5912,12 @@
 						if(ref && ref.length && ref.parent().is('.jstree-closed, .jstree-open, .jstree-leaf')) {
 							off = ref.offset();
 							rel = data.event.pageY - off.top;
-							h = ref.height();
+							// START: TGFI Modification
+							// h = ref.height();
+							h = ref.outerHeight();
+							// var pad_h = parseFloat(ref.css("padding-top").replace("px", "")) + parseFloat(ref.css("padding-top").replace("px", ""));
+							// h = ref.height() + pad_h;
+							// END: TGFI Modification
 							if(rel < h / 3) {
 								o = ['b', 'i', 'a'];
 							}
@@ -5938,6 +5950,18 @@
 										i = ref.parent().index() + 1;
 										break;
 								}
+								// START: TGFI Modification
+								$(".jstree-anchor.dnd_inside, .jstree_anchor.dnd_after, .jstree_anchor.dnd_before").removeClass("dnd_inside").removeClass("dnd_before").removeClass("dnd_after");
+								if(o[0] === 'a'){
+										ref.addClass("dnd_after");
+								}
+								else if(o[0] === 'b'){
+									ref.addClass("dnd_before");
+								}
+								else{
+									ref.addClass("dnd_inside");
+								}
+								// END: TGFI Modification
 								ok = true;
 								for(t1 = 0, t2 = data.data.nodes.length; t1 < t2; t1++) {
 									op = data.data.origin && (data.data.origin.settings.dnd.always_copy || (data.data.origin.settings.dnd.copy && (data.event.metaKey || data.event.ctrlKey))) ? "copy_node" : "move_node";
